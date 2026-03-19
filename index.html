@@ -511,8 +511,7 @@ function dayKey(){return week+'_'+DAYS[dayIdx].id;}
 function isHardDay(){return!!(hardDB[dayKey()]);}
 
 function getSess(dayId){
-  const key=week+'_'+dayId;
-  return sessDB[key]||DAYS.find(d=>d.id===dayId).def;
+  return sessDB[week+'_'+dayId]||null;
 }
 function setSess(dayId,t){sessDB[week+'_'+dayId]=t;save();}
 
@@ -563,19 +562,31 @@ function getSug(dayId,st,ex){
 
 // ── FATIGUE DETECTION ──
 function getWeekLoad(){
+  // ONLY count activity that the user has explicitly confirmed:
+  // - Training: at least one exercise marked done
+  // - Fútbol: user has explicitly tapped "confirmar partido" (stored in sessDB as confirmed)
+  // - Descanso: never counts as load
+  // Never assume anything from defaults
   let load=0;
   DAYS.forEach(d=>{
-    const st=getSess(d.id);
-    if(st==='PIERNA'||st==='TORSO')load+=2;
-    else if(st==='FULLBODY')load+=1.5;
-    else if(st==='FÚTBOL')load+=1.5;
+    const st=sessDB[week+'_'+d.id]; // only explicitly set sessions count
+    if(!st)return; // user hasn't set anything for this day → skip
+    const dk=db[week]&&db[week][d.id+'_'+st];
+    const hasDone=dk&&Object.values(dk).some(e=>e.done);
+    if(st==='PIERNA'||st==='TORSO'){if(hasDone)load+=2;}
+    else if(st==='FULLBODY'){if(hasDone)load+=1.5;}
+    else if(st==='FÚTBOL'){
+      // Only count if user confirmed the match played
+      if(hardDB[week+'_confirmed_'+d.id])load+=1.5;
+    }
   });
   return load;
 }
-function isFatiguedWeek(){return getWeekLoad()>=7;}
+function isFatiguedWeek(){return getWeekLoad()>=5.5;}
 function tomorrowIsFutbol(){
   const tmrIdx=(dayIdx+1)%7;
-  return getSess(DAYS[tmrIdx].id)==='FÚTBOL';
+  // Only warn if user has explicitly set tomorrow as fútbol
+  return sessDB[week+'_'+DAYS[tmrIdx].id]==='FÚTBOL';
 }
 
 // ── REST TIMER ──
@@ -691,6 +702,7 @@ function renderHoy(){
   const sess=getSess(day.id);
   const isTrain=sess==='PIERNA'||sess==='TORSO'||sess==='FULLBODY';
   const isRest=sess==='DESCANSO'||sess==='FÚTBOL';
+  const isUnset=!sess;
 
   // hard day UI
   const hdBtn=document.getElementById('hardDayBtn');
@@ -740,13 +752,13 @@ function renderHoy(){
 
   // day heading
   h+=`<div class="dhdg">
-    <span class="dbadge ${SESS_BADGE[sess]||'br'}">${sess}</span>
+    ${sess?`<span class="dbadge ${SESS_BADGE[sess]||'br'}">${sess}</span>`:''}
     <span class="dtitle">${day.full}</span>
     ${isToday?'<span class="today-tag">HOY</span>':''}
   </div>`;
 
   // session picker (always visible)
-  h+=`<div class="spicker"><div class="spicker-title">¿Qué haces hoy?</div>
+  h+=`<div class="spicker"><div class="spicker-title">${sess?'Sesión de hoy:':'¿Qué vas a hacer hoy?'}</div>
     <div class="sbtns">
       ${['PIERNA','TORSO','FULLBODY'].map(t=>`<div class="sbtn${sess===t?' sel':''}" onclick="selSess('${day.id}','${t}')">
         ${t}<span class="sd">${SESS_DESC[t]}</span>
@@ -759,12 +771,26 @@ function renderHoy(){
     </div>
   </div>`;
 
+  if(!sess){
+    h+=`<div class="tip">👆 Selecciona qué vas a hacer hoy para empezar.</div>`;
+    document.getElementById('view-hoy').innerHTML=h;
+    return;
+  }
+
   if(isRest){
     const rc=REST_CONTENT[sess];
     h+=`<div class="rcard"><div class="rtitle">${rc.title}</div><p class="rdesc">${rc.desc}</p>`;
     rc.items.forEach(it=>h+=`<div class="mrow"><span>${it.n}</span><span>${it.s}</span></div>`);
     h+=`</div>`;
-    if(sess==='FÚTBOL')h+=`<div class="tip"><strong>Nunca saltes</strong> los isquiotibiales con banda post-partido. A los 39 es tu seguro.</div>`;
+    if(sess==='FÚTBOL'){
+      const confirmed=hardDB[week+'_confirmed_'+day.id];
+      h+=`<div style="margin-top:12px">
+        <button onclick="confirmMatch('${day.id}')" style="width:100%;height:52px;background:${confirmed?'rgba(106,191,106,0.15)':'var(--bg3)'};border:1.5px solid ${confirmed?'var(--gn)':'var(--brd2)'};border-radius:12px;color:${confirmed?'var(--gn)':'var(--mu2)'};font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:700;cursor:pointer;touch-action:manipulation;letter-spacing:0.5px">
+          ${confirmed?'✓ Partido confirmado':'⚽ Confirmar que he jugado'}
+        </button>
+      </div>`;
+      h+=`<div class="tip" style="margin-top:10px"><strong>Nunca saltes</strong> los isquiotibiales con banda post-partido. A los 39 es tu seguro.</div>`;
+    }
     document.getElementById('view-hoy').innerHTML=h;
     return;
   }
@@ -878,7 +904,7 @@ function renderSemana(){
     const hasDone=dk&&Object.values(dk).some(e=>e.done);
     const isTrain=st==='PIERNA'||st==='TORSO'||st==='FULLBODY';
     const plan=blk[st];
-    const focus=plan?plan.focus:(st==='FÚTBOL'?'Partido de fútbol':'Descanso');
+    const focus=plan?plan.focus:(st==='FÚTBOL'?'Partido de fútbol':st==='DESCANSO'?'Descanso':'Sin definir');
     const savedTime=sessTimeDB[week+'_'+d.id];
 
     let stHtml='';
@@ -1228,6 +1254,12 @@ async function saveSession(){
   }catch(e){msg.textContent='✓ Guardado localmente';msg.className='smsg ok';}
   btn.disabled=false;btn.textContent='Guardar sesión';sp.classList.remove('show');
   setTimeout(()=>{msg.textContent='';msg.className='smsg';},3000);
+}
+
+function confirmMatch(dayId){
+  const k=week+'_confirmed_'+dayId;
+  hardDB[k]=!hardDB[k];
+  save();renderHoy();renderDaySel();
 }
 
 // ══════════════════════════════════════════════════
