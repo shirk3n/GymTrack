@@ -212,6 +212,38 @@ body{display:flex;flex-direction:column}
 .metric-hist-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd);font-size:13px}
 .metric-hist-row:last-child{border-bottom:none}
 
+/* NEW ACTIVITY BADGES */
+.b-en{background:rgba(240,96,96,0.15);color:#f06060;border:1px solid rgba(240,96,96,0.25)}
+.b-ki{background:rgba(106,176,245,0.15);color:#6ab0f5;border:1px solid rgba(106,176,245,0.25)}
+.b-bi{background:rgba(245,208,80,0.15);color:#f5d050;border:1px solid rgba(245,208,80,0.25)}
+
+/* WEEKLY PLANNER MODAL */
+.planov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:998;flex-direction:column}
+.planov.show{display:flex}
+.plan-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--brd);flex-shrink:0}
+.plan-close{width:34px;height:34px;background:var(--bg3);border:1px solid var(--brd2);border-radius:8px;color:var(--tx);font-size:16px;cursor:pointer;touch-action:manipulation}
+.plan-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 30px}
+.plan-hd{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px}
+.plan-sub{font-size:12px;color:var(--mu2);margin-bottom:16px;line-height:1.4}
+.plan-day{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.plan-day-lbl{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;margin-bottom:6px}
+.plan-select{width:100%;padding:9px;background:var(--bg3);border:1px solid var(--brd2);border-radius:8px;color:var(--tx);font-size:14px;margin-bottom:8px;font-family:'Barlow',sans-serif}
+.plan-flags{display:flex;gap:14px;font-size:12px;color:var(--mu2);flex-wrap:wrap}
+.plan-flags label{display:flex;align-items:center;gap:5px;cursor:pointer;touch-action:manipulation}
+.plan-gen-btn{width:100%;padding:13px;background:var(--ac);border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#000;cursor:pointer;margin-top:10px;text-transform:uppercase;touch-action:manipulation}
+.plan-res-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;margin:16px 0 8px}
+.plan-res-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0 1px;border-top:1px solid var(--brd)}
+.plan-res-type{font-weight:700;color:var(--ac)}
+.plan-res-reason{font-size:11px;color:var(--mu2);padding-bottom:6px}
+
+.plan-sync-box{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:16px}
+.plan-sync-btn{width:100%;padding:10px;background:var(--ac);border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer;touch-action:manipulation}
+.plan-sync-btn:disabled{opacity:.6}
+.plan-sync-status{font-size:12px;color:var(--tx);margin-top:8px;line-height:1.5}
+.plan-sync-details{margin-top:8px;font-size:11px;color:var(--mu2)}
+.plan-sync-details summary{cursor:pointer}
+.plan-sync-details input{margin-top:6px;font-size:11px}
+
 </style>
 </head>
 <body>
@@ -230,14 +262,26 @@ body{display:flex;flex-direction:column}
   <button class="tstop" onclick="stopTimer()">✕ Cancelar</button>
 </div>
 
+<!-- WEEKLY PLANNER MODAL -->
+<div class="planov" id="planOv">
+  <div class="plan-topbar">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800">📅 Planificador Semanal</div>
+    <button class="plan-close" onclick="closePlanModal()">✕</button>
+  </div>
+  <div class="plan-scroll" id="planBody"></div>
+</div>
+
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-top">
     <div class="hdr-title">Juan <span>GYM</span></div>
-    <div class="week-nav">
-      <button class="wbtn" onclick="changeWeek(-1)">‹</button>
-      <div class="wlbl" id="wlbl">Semana 1<small id="wlbl-meso">Bloque 1</small></div>
-      <button class="wbtn" onclick="changeWeek(1)">›</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="wbtn" onclick="openPlanModal()" title="Planificar semana">📅</button>
+      <div class="week-nav">
+        <button class="wbtn" onclick="changeWeek(-1)">‹</button>
+        <div class="wlbl" id="wlbl">Semana 1<small id="wlbl-meso">Bloque 1</small></div>
+        <button class="wbtn" onclick="changeWeek(1)">›</button>
+      </div>
     </div>
   </div>
   <div class="day-sel" id="daySel"></div>
@@ -293,6 +337,14 @@ body{display:flex;flex-direction:column}
       <div class="sbtns2">
         <div class="sbtn" onclick="setSess('FÚTBOL')">⚽ Fútbol</div>
         <div class="sbtn" onclick="setSess('DESCANSO')">😴 Descanso</div>
+      </div>
+      <div class="sbtns" style="margin-top:5px">
+        <div class="sbtn" onclick="setSess('ENDURO')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><circle cx="5" cy="18" r="3"/><circle cx="19" cy="18" r="3"/><path d="M5 18 L9 10 L14 10 L19 18 M9 10 L7 5 L11.5 5 M14 10 L16.5 5 M11.5 5 L14.5 7"/></svg>Enduro</div>
+        <div class="sbtn" onclick="setSess('KITE')">🪁 Kite</div>
+        <div class="sbtn" onclick="setSess('BICI')">🚴 Bici</div>
+      </div>
+      <div class="sbtns2" style="margin-top:5px">
+        <div class="sbtn" onclick="promptOtroManual()">🎾 Otra actividad</div>
       </div>
     </div>
 
@@ -441,112 +493,102 @@ body{display:flex;flex-direction:column}
 // ═══════════════════════════════════════════════════════
 const BLOCKS=[
   {
-    label:'Mesociclo 1',sub:'Adaptación (Sem 1-4)',
-    PIERNA:{focus:'Hip Thrust + Sentadilla Smith',exercises:[
+    label:'Fase 1',sub:'Base de Fuerza y Movimiento (Sem 1-4)',
+    PIERNA:{focus:'Cadena posterior + Estabilidad de rodilla',exercises:[
       {n:'Movilidad cadera dinámica',p:'10/lado',wu:true},
-      {n:'Activación glúteo banda',p:'2×15',wu:true},
-      {n:'Hip Thrust Smith',p:'4×10-12',rr:[10,12],rest:90,hw:true,yt:'Hip thrust barra Smith ejercicio'},
-      {n:'Sentadilla Smith',p:'4×10-12',rr:[10,12],rest:90,hw:true,yt:'Sentadilla barra Smith ejercicio'},
-      {n:'RDL barra (Rumano)',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Peso muerto rumano barra ejercicio'},
-      {n:'Zancada con mancuernas',p:'3×10/lado',rr:[10,12],rest:60,hw:true,yt:'Zancada mancuernas ejercicio'},
-      {n:'Curl femoral cable C10',p:'3×12-15',rr:[12,15],rest:60,hw:true,yt:'Curl femoral polea ejercicio'},
-      {n:'Gemelos Smith',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Gemelos barra Smith ejercicio'},
-      {n:'Plancha abdominal',p:'3×30seg',rest:45,hw:false,yt:'Plancha abdominal ejercicio'},
+      {n:'Activación glúteo con banda',p:'2×15',wu:true},
+      {n:'RDL con kettlebell',p:'4×8-10',rr:[8,10],rest:75,hw:true,yt:'Peso muerto rumano kettlebell ejercicio'},
+      {n:'Sentadilla goblet KB',p:'4×10-12',rr:[10,12],rest:75,hw:true,yt:'Sentadilla goblet kettlebell'},
+      {n:'Zancada búlgara con mancuernas',p:'3×8/lado',rr:[8,10],rest:60,hw:true,yt:'Zancada búlgara mancuernas ejercicio'},
+      {n:'Curl femoral nórdico asistido banda',p:'3×6-8',rest:60,hw:false,yt:'Curl femoral nórdico ejercicio'},
+      {n:'Elevación de gemelo unilateral',p:'3×15/lado',rr:[12,15],rest:45,hw:true,yt:'Elevación de gemelo unilateral mancuerna'},
+      {n:'Pallof press cable C10',p:'3×30seg/lado',rest:30,hw:false,yt:'Pallof press polea core'},
     ]},
-    TORSO:{focus:'Press Inclinado + Remo Cable',exercises:[
+    TORSO:{focus:'Empuje/Tracción + Salud de hombro (base kite)',exercises:[
       {n:'Band pull apart',p:'2×15',wu:true},
       {n:'Rotación torácica suelo',p:'10/lado',wu:true},
-      {n:'Press inclinado Smith',p:'4×10-12',rr:[10,12],rest:90,hw:true,yt:'Press inclinado Smith ejercicio'},
-      {n:'Remo cable bajo C10',p:'4×10-12',rr:[10,12],rest:90,hw:true,yt:'Remo bajo polea ejercicio'},
-      {n:'Press militar Smith',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Press militar Smith ejercicio'},
-      {n:'Jalón agarre neutro C10',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Jalón polea agarre neutro'},
-      {n:'Elevaciones laterales',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Elevaciones laterales mancuernas'},
-      {n:'Face pull cuerda C10',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Face pull cuerda polea'},
-      {n:'Curl barra EZ',p:'3×10-12',rr:[10,12],rest:60,hw:true,yt:'Curl barra EZ ejercicio'},
-      {n:'Extensión tríceps cuerda',p:'3×10-12',rr:[10,12],rest:45,hw:true,yt:'Extensión tríceps polea cuerda'},
+      {n:'Press banca con mancuernas',p:'4×10-12',rr:[10,12],rest:75,hw:true,yt:'Press banca mancuernas ejercicio'},
+      {n:'Remo cable bajo C10',p:'4×10-12',rr:[10,12],rest:75,hw:true,yt:'Remo bajo polea ejercicio'},
+      {n:'Press militar con mancuernas',p:'3×10-12',rr:[10,12],rest:60,hw:true,yt:'Press militar mancuernas ejercicio'},
+      {n:'Dominada asistida banda / Jalón C10',p:'3×8-10',rr:[8,10],rest:75,hw:true,yt:'Jalón polea agarre neutro ejercicio'},
+      {n:'Face pull banda o cable C10',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Face pull banda ejercicio'},
+      {n:'Suitcase carry con kettlebell',p:'3×20m/lado',rest:45,hw:false,yt:'Suitcase carry kettlebell ejercicio'},
     ]},
-    FULLBODY:{focus:'Fullbody — Frecuencia 2 Ligero',exercises:[
+    FULLBODY:{focus:'Fullbody — Core Kite/Enduro + Base Fútbol',exercises:[
       {n:'Skipping + talones glúteo',p:'2×30seg',wu:true},
-      {n:'Hip Thrust Smith (ligero)',p:'3×12',rr:[10,12],rest:75,hw:true,yt:'Hip thrust barra Smith ejercicio'},
-      {n:'Press plano Smith',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Press banca plano Smith'},
+      {n:'Swing KB',p:'3×12',rr:[10,15],rest:60,hw:true,yt:'Swing kettlebell ejercicio'},
+      {n:'Press banca con mancuernas',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Press banca mancuernas ejercicio'},
       {n:'Remo cable bajo C10',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Remo bajo polea ejercicio'},
       {n:'Sentadilla goblet KB',p:'3×12-15',rr:[12,15],rest:60,hw:true,yt:'Sentadilla goblet kettlebell'},
-      {n:'Elevaciones laterales',p:'3×15',rr:[12,15],rest:45,hw:true,yt:'Elevaciones laterales mancuernas'},
+      {n:'Farmer\u2019s walk con kettlebells',p:'3×20m',rest:60,hw:false,yt:'Farmer walk kettlebell ejercicio'},
       {n:'Plancha lateral',p:'3×20seg/lado',rest:30,hw:false,yt:'Plancha lateral ejercicio'},
     ]},
   },
   {
-    label:'Mesociclo 2',sub:'Hipertrofia (Sem 5-8)',
-    PIERNA:{focus:'Hip Thrust Pesado + RDL',exercises:[
+    label:'Fase 2',sub:'Fuerza-Potencia (Sem 5-8)',
+    PIERNA:{focus:'Fuerza de cadera/rodilla + Prevención de isquios',exercises:[
       {n:'Movilidad cadera dinámica',p:'10/lado',wu:true},
-      {n:'Activación glúteo banda',p:'2×15',wu:true},
-      {n:'Hip Thrust Smith',p:'4×8-10',rr:[8,10],rest:120,hw:true,yt:'Hip thrust barra Smith ejercicio'},
-      {n:'Sentadilla Smith',p:'4×8-10',rr:[8,10],rest:120,hw:true,yt:'Sentadilla barra Smith ejercicio'},
-      {n:'RDL barra (Rumano)',p:'4×8-10',rr:[8,10],rest:90,hw:true,yt:'Peso muerto rumano barra ejercicio'},
-      {n:'Prensa (leg press C10)',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Leg press ejercicio'},
-      {n:'Curl femoral cable C10',p:'3×10-12',rr:[10,12],rest:60,hw:true,yt:'Curl femoral polea ejercicio'},
-      {n:'Zancada KB unilateral',p:'3×10/lado',rr:[10,12],rest:60,hw:true,yt:'Zancada mancuernas ejercicio'},
-      {n:'Gemelos Smith',p:'4×12-15',rr:[12,15],rest:45,hw:true,yt:'Gemelos barra Smith ejercicio'},
-      {n:'Cable crunch C10',p:'3×12-15',rr:[12,15],rest:45,hw:true,yt:'Cable crunch polea abdominal'},
+      {n:'Activación glúteo con banda',p:'2×15',wu:true},
+      {n:'RDL con kettlebell pesado',p:'4×6-8',rr:[6,8],rest:90,hw:true,yt:'Peso muerto rumano kettlebell ejercicio'},
+      {n:'Sentadilla goblet KB pesada',p:'4×6-8',rr:[6,8],rest:90,hw:true,yt:'Sentadilla goblet kettlebell'},
+      {n:'Zancada con salto',p:'3×6/lado',rest:75,hw:false,yt:'Zancada con salto ejercicio'},
+      {n:'Curl femoral nórdico',p:'3×8',rest:60,hw:false,yt:'Curl femoral nórdico ejercicio'},
+      {n:'Swing KB pesado',p:'4×10',rr:[8,12],rest:75,hw:true,yt:'Swing kettlebell ejercicio'},
+      {n:'Gemelos unilateral con mancuerna',p:'3×15/lado',rr:[12,15],rest:45,hw:true,yt:'Elevación de gemelo unilateral mancuerna'},
+      {n:'Pallof press cable C10',p:'3×12/lado',rr:[12,15],rest:45,hw:true,yt:'Pallof press polea core'},
     ]},
-    TORSO:{focus:'Volumen — Press + Jalón + Polea',exercises:[
+    TORSO:{focus:'Fuerza — Empuje/Tracción pesada',exercises:[
       {n:'Band pull apart',p:'2×15',wu:true},
       {n:'Rotación torácica suelo',p:'10/lado',wu:true},
-      {n:'Press inclinado Smith',p:'4×8-10',rr:[8,10],rest:120,hw:true,yt:'Press inclinado Smith ejercicio'},
-      {n:'Jalón agarre ancho C10',p:'4×8-10',rr:[8,10],rest:90,hw:true,yt:'Jalón polea agarre ancho'},
-      {n:'Press plano Smith',p:'3×10-12',rr:[10,12],rest:90,hw:true,yt:'Press banca plano Smith'},
-      {n:'Remo cable alto C10',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Remo alto polea ejercicio'},
-      {n:'Press Arnold KB',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Press Arnold mancuernas'},
-      {n:'Face pull cuerda C10',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Face pull cuerda polea'},
-      {n:'Curl martillo KB',p:'3×10-12',rr:[10,12],rest:60,hw:true,yt:'Curl martillo mancuernas ejercicio'},
-      {n:'Fondos tríceps barras C10',p:'3×máx',rr:[8,12],rest:60,hw:false,yt:'Fondos tríceps paralelas ejercicio'},
+      {n:'Press banca con mancuernas pesado',p:'4×6-8',rr:[6,8],rest:90,hw:true,yt:'Press banca mancuernas ejercicio'},
+      {n:'Remo cable bajo C10 pesado',p:'4×6-8',rr:[6,8],rest:90,hw:true,yt:'Remo bajo polea ejercicio'},
+      {n:'Press militar con mancuernas',p:'3×8-10',rr:[8,10],rest:75,hw:true,yt:'Press militar mancuernas ejercicio'},
+      {n:'Dominada asistida banda / Jalón C10',p:'3×8-10',rr:[8,10],rest:75,hw:true,yt:'Jalón polea agarre neutro ejercicio'},
+      {n:'Face pull banda o cable C10',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Face pull banda ejercicio'},
+      {n:'Suitcase carry KB pesado',p:'3×20m/lado',rest:45,hw:false,yt:'Suitcase carry kettlebell ejercicio'},
     ]},
-    FULLBODY:{focus:'Fullbody — Potencia + Core',exercises:[
-      {n:'Saltos explosivos sitio',p:'3×5',wu:true},
-      {n:'Swing KB',p:'4×12',rr:[10,15],rest:60,hw:true,yt:'Swing kettlebell ejercicio'},
-      {n:'Press inclinado barra',p:'3×8-10',rr:[8,10],rest:90,hw:true,yt:'Press inclinado barra ejercicio'},
-      {n:'RDL KB unilateral',p:'3×10/lado',rr:[10,12],rest:75,hw:true,yt:'Peso muerto rumano unilateral kettlebell'},
-      {n:'Remo cable bajo C10',p:'3×10-12',rr:[10,12],rest:75,hw:true,yt:'Remo bajo polea ejercicio'},
-      {n:'Pallof press cable C10',p:'3×12/lado',rr:[12,15],rest:45,hw:true,yt:'Pallof press polea core'},
-      {n:'Plancha con alcance',p:'3×8/lado',rest:45,hw:false,yt:'Plancha con alcance ejercicio'},
+    FULLBODY:{focus:'Fullbody — Potencia + Core Fútbol/Kite',exercises:[
+      {n:'Saltos explosivos en sitio',p:'3×5',wu:true},
+      {n:'Swing KB pesado',p:'4×10',rr:[8,12],rest:75,hw:true,yt:'Swing kettlebell ejercicio'},
+      {n:'Press banca con mancuernas',p:'3×8-10',rr:[8,10],rest:75,hw:true,yt:'Press banca mancuernas ejercicio'},
+      {n:'RDL KB unilateral',p:'3×8/lado',rr:[8,10],rest:75,hw:true,yt:'Peso muerto rumano unilateral kettlebell'},
+      {n:'Remo cable bajo C10',p:'3×8-10',rr:[8,10],rest:75,hw:true,yt:'Remo bajo polea ejercicio'},
+      {n:'Farmer\u2019s walk KB pesado',p:'3×25m',rest:60,hw:false,yt:'Farmer walk kettlebell ejercicio'},
+      {n:'Pallof press cable C10',p:'3×10/lado',rr:[10,12],rest:45,hw:true,yt:'Pallof press polea core'},
     ]},
   },
   {
-    label:'Mesociclo 3',sub:'Fuerza-Potencia (Sem 9-12)',
-    PIERNA:{focus:'Zancada + Peso Muerto',exercises:[
-      {n:'Hip flexor lunge dinámico',p:'8/lado',wu:true},
-      {n:'Saltos en cajón',p:'4×4',wu:true},
-      {n:'Hip Thrust Smith Pesado',p:'5×6-8',rr:[6,8],rest:150,hw:true,yt:'Hip thrust barra Smith ejercicio'},
-      {n:'Sentadilla Smith Pesada',p:'5×6-8',rr:[6,8],rest:150,hw:true,yt:'Sentadilla barra Smith ejercicio'},
-      {n:'Peso muerto barra',p:'4×6-8',rr:[6,8],rest:120,hw:true,yt:'Peso muerto barra ejercicio'},
-      {n:'Zancada dinámica barra',p:'4×8/lado',rr:[8,10],rest:90,hw:true,yt:'Zancada dinámica barra ejercicio'},
-      {n:'Curl femoral cable C10',p:'3×10-12',rr:[10,12],rest:60,hw:true,yt:'Curl femoral polea ejercicio'},
-      {n:'Gemelos unilateral KB',p:'3×12-15',rr:[12,15],rest:45,hw:true,yt:'Gemelos unilateral kettlebell'},
-      {n:'Cable crunch C10',p:'3×12-15',rr:[12,15],rest:45,hw:true,yt:'Cable crunch polea abdominal'},
+    label:'Fase 3',sub:'Explosividad y Rendimiento en Fútbol (Sem 9-12)',
+    PIERNA:{focus:'Potencia de pierna + Series de sprints',exercises:[
+      {n:'Skipping alto + activación dinámica',p:'2×20 pasos',wu:true},
+      {n:'Series de sprints cortos',p:'6×15m',rest:90,hw:false,yt:'Técnica de sprint aceleración ejercicio'},
+      {n:'Cambios de dirección (agility)',p:'4×4',rest:75,hw:false,yt:'Ejercicios cambio de dirección fútbol'},
+      {n:'RDL con kettlebell explosivo',p:'4×5',rr:[4,6],rest:90,hw:true,yt:'Peso muerto rumano kettlebell ejercicio'},
+      {n:'Squat jump con KB ligero',p:'3×5',rr:[4,6],rest:90,hw:true,yt:'Squat jump kettlebell ejercicio'},
+      {n:'Zancada lateral con banda',p:'3×8/lado',rest:60,hw:false,yt:'Zancada lateral banda ejercicio'},
+      {n:'Curl femoral nórdico',p:'3×6',rest:60,hw:false,yt:'Curl femoral nórdico ejercicio'},
+      {n:'Pallof press cable C10 pesado',p:'3×10/lado',rr:[10,12],rest:45,hw:true,yt:'Pallof press polea core'},
     ]},
-    TORSO:{focus:'Fuerza — Barra + Dominadas',exercises:[
+    TORSO:{focus:'Potencia de empuje/tracción',exercises:[
       {n:'Band pull apart',p:'2×15',wu:true},
-      {n:'Rotación torácica suelo',p:'10/lado',wu:true},
-      {n:'Press inclinado barra',p:'5×5-6',rr:[5,6],rest:150,hw:true,yt:'Press inclinado barra ejercicio'},
-      {n:'Dominadas C10',p:'4×máx',rr:[6,10],rest:120,hw:false,yt:'Dominadas barra ejercicio'},
-      {n:'Press militar barra',p:'4×6-8',rr:[6,8],rest:120,hw:true,yt:'Press militar barra ejercicio'},
-      {n:'Remo cable bajo C10',p:'4×8-10',rr:[8,10],rest:90,hw:true,yt:'Remo bajo polea ejercicio'},
-      {n:'Face pull cuerda C10',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Face pull cuerda polea'},
-      {n:'Curl barra EZ',p:'3×8-10',rr:[8,10],rest:60,hw:true,yt:'Curl barra EZ ejercicio'},
-      {n:'Extensión tríceps cuerda',p:'3×8-10',rr:[8,10],rest:45,hw:true,yt:'Extensión tríceps polea cuerda'},
+      {n:'Rotación torácica explosiva',p:'10/lado',wu:true},
+      {n:'Press banca con mancuernas explosivo',p:'4×5-6',rr:[5,6],rest:120,hw:true,yt:'Press banca explosivo mancuernas ejercicio'},
+      {n:'Remo cable explosivo C10',p:'4×5-6',rr:[5,6],rest:120,hw:true,yt:'Remo polea explosivo ejercicio'},
+      {n:'Press militar con mancuernas',p:'3×6-8',rr:[6,8],rest:90,hw:true,yt:'Press militar mancuernas ejercicio'},
+      {n:'Dominada asistida banda / Jalón C10',p:'3×6-8',rr:[6,8],rest:90,hw:true,yt:'Jalón polea agarre neutro ejercicio'},
+      {n:'Face pull banda o cable C10',p:'3×15-20',rr:[15,20],rest:45,hw:true,yt:'Face pull banda ejercicio'},
+      {n:'Suitcase carry KB pesado',p:'3×25m/lado',rest:45,hw:false,yt:'Suitcase carry kettlebell ejercicio'},
     ]},
-    FULLBODY:{focus:'Fullbody — Potencia Fútbol',exercises:[
-      {n:'Saltos explosivos sitio',p:'4×5',wu:true},
+    FULLBODY:{focus:'Fullbody — Rendimiento Fútbol + Kite/Enduro',exercises:[
+      {n:'Saltos explosivos en sitio',p:'4×5',wu:true},
+      {n:'Series de sprints cortos',p:'4×15m',rest:90,hw:false,yt:'Técnica de sprint aceleración ejercicio'},
       {n:'Swing KB pesado',p:'4×8',rr:[6,10],rest:90,hw:true,yt:'Swing kettlebell ejercicio'},
-      {n:'Press inclinado barra',p:'3×6-8',rr:[6,8],rest:90,hw:true,yt:'Press inclinado barra ejercicio'},
-      {n:'Romanian deadlift KB',p:'3×8-10',rr:[8,10],rest:90,hw:true,yt:'Peso muerto rumano kettlebell'},
-      {n:'Jalón agarre neutro C10',p:'3×8-10',rr:[8,10],rest:90,hw:true,yt:'Jalón polea agarre neutro'},
-      {n:'Press Arnold KB',p:'3×8-10',rr:[8,10],rest:75,hw:true,yt:'Press Arnold mancuernas'},
-      {n:'Pallof press cable C10',p:'3×10/lado',rr:[10,12],rest:45,hw:true,yt:'Pallof press polea core'},
+      {n:'Zancada con salto',p:'3×6/lado',rest:75,hw:false,yt:'Zancada con salto ejercicio'},
+      {n:'Farmer\u2019s walk KB pesado',p:'3×25m',rest:60,hw:false,yt:'Farmer walk kettlebell ejercicio'},
+      {n:'Pallof press cable C10 pesado',p:'3×10/lado',rr:[10,12],rest:45,hw:true,yt:'Pallof press polea core'},
     ]},
   }
 ];
-
 const DAYS=[
   {id:'lunes',    lbl:'LUN', full:'Lunes',    def:'PIERNA'},
   {id:'martes',   lbl:'MAR', full:'Martes',   def:'DESCANSO'},
@@ -557,8 +599,72 @@ const DAYS=[
   {id:'domingo',  lbl:'DOM', full:'Domingo',  def:'DESCANSO'}
 ];
 
-const BADGE_CLS={PIERNA:'b-pi',TORSO:'b-to',FULLBODY:'b-fb',FÚTBOL:'b-fut',DESCANSO:'b-des'};
-const BADGE_LBL={PIERNA:'🦵 PIERNA',TORSO:'💪 TORSO',FULLBODY:'⚡ FULLBODY',FÚTBOL:'⚽ FÚTBOL',DESCANSO:'😴 DESCANSO'};
+// Icono SVG propio de moto de enduro/motocross (Unicode no tiene emoji específico)
+const ENDURO_ICON='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-3px;margin-right:2px"><circle cx="5" cy="18" r="3"/><circle cx="19" cy="18" r="3"/><path d="M5 18 L9 10 L14 10 L19 18 M9 10 L7 5 L11.5 5 M14 10 L16.5 5 M11.5 5 L14.5 7"/></svg>';
+
+const BADGE_CLS={PIERNA:'b-pi',TORSO:'b-to',FULLBODY:'b-fb',FÚTBOL:'b-fut',DESCANSO:'b-des',ENDURO:'b-en',KITE:'b-ki',BICI:'b-bi',OTRO:'b-bi'};
+const BADGE_LBL={PIERNA:'🦵 PIERNA',TORSO:'💪 TORSO',FULLBODY:'⚡ FULLBODY',FÚTBOL:'⚽ FÚTBOL',DESCANSO:'😴 DESCANSO',ENDURO:ENDURO_ICON+'ENDURO',KITE:'🪁 KITE',BICI:'🚴 BICI',OTRO:'🎾 OTRO'};
+
+// ── PLAN DE ACTIVIDADES (para el Planificador Semanal) ──
+const PLAN_TAGS=[
+  {id:'LIBRE',lbl:'⚙️ Libre — lo calculo yo (gym o descanso)'},
+  {id:'FUTBOL_AMISTOSO',lbl:'⚽ Fútbol amistoso'},
+  {id:'FUTBOL_REAL',lbl:'⚽ Partido real (alta intensidad)'},
+  {id:'ENDURO',lbl:'🏍️ Enduro'},
+  {id:'KITE',lbl:'🪁 Kitesurf'},
+  {id:'BICI',lbl:'🚴 Bici (larga/eléctrica)'},
+  {id:'OTRO',lbl:'🎾 Otra actividad...'},
+];
+
+const OTHER_ACTIVITIES=[
+  {id:'padel',lbl:'🎾 Pádel',fatigue:'PIERNAS'},
+  {id:'tenis',lbl:'🎾 Tenis',fatigue:'PIERNAS'},
+  {id:'emtb',lbl:'🚵 e-MTB',fatigue:'PIERNAS'},
+  {id:'running',lbl:'🏃 Running',fatigue:'PIERNAS'},
+  {id:'baloncesto',lbl:'🏀 Baloncesto',fatigue:'PIERNAS'},
+  {id:'natacion',lbl:'🏊 Natación',fatigue:'CARDIO'},
+  {id:'escalada',lbl:'🧗 Escalada',fatigue:'AGARRE'},
+  {id:'personalizado',lbl:'✏️ Otra (escribir nombre)',fatigue:'CARDIO'},
+];
+const FATIGUE_TYPES=[
+  {id:'PIERNAS',lbl:'🦵 Piernas / impacto'},
+  {id:'AGARRE',lbl:'✊ Agarre / antebrazo'},
+  {id:'CORE',lbl:'🧱 Core / rotación'},
+  {id:'CARDIO',lbl:'❤️ Solo cardio (fatiga residual baja)'},
+];
+const FATIGUE_NOTE={
+  PIERNAS:'Impacto/carga en piernas — evita pierna pesada en el gimnasio mañana.',
+  AGARRE:'Fatiga de agarre/antebrazo — evita tirones pesados mañana.',
+  CORE:'Fatiga de core/rotación — evita trabajo de tronco pesado mañana.',
+  CARDIO:'Esfuerzo cardiovascular — fatiga residual baja, gimnasio normal mañana.',
+};
+
+const EXTERNAL_INFO={
+  ENDURO:{title:ENDURO_ICON+'Día de Enduro',
+    note:'Fatiga lumbar y de antebrazo/agarre por el impacto y el control de la moto. Evita tirones pesados (dominadas, remo pesado) el día siguiente en el gimnasio.',
+    stretches:[
+      {n:'Estiramiento extensores de muñeca/antebrazo',s:'45 seg/lado'},
+      {n:'Rotación lumbar suave (suelo)',s:'10/lado'},
+      {n:'Foam roller glúteo/lumbar',s:'90 seg/lado'},
+      {n:'Estiramiento flexores de cadera',s:'45 seg/lado'},
+    ]},
+  KITE:{title:'🪁 Día de Kitesurf',
+    note:'Core y tren superior (dorsales/hombros) trabajados de forma isométrica explosiva por los tirones de la cometa. Evita press pesado el día siguiente en el gimnasio.',
+    stretches:[
+      {n:'Estiramiento de dorsal ancho',s:'45 seg/lado'},
+      {n:'Estiramiento de hombro cruzado',s:'45 seg/lado'},
+      {n:'Rotación torácica en suelo',s:'10/lado'},
+      {n:'Plancha suave de descompresión',s:'20 seg'},
+    ]},
+  BICI:{title:'🚴 Bici (larga distancia / eléctrica)',
+    note:'Esfuerzo cardio prolongado. Fatiga de agarre, hombros y zona lumbar por la postura mantenida durante horas.',
+    stretches:[
+      {n:'Estiramiento flexores de muñeca',s:'45 seg/lado'},
+      {n:'Estiramiento de psoas/flexor de cadera',s:'45 seg/lado'},
+      {n:'Foam roller cuádriceps',s:'90 seg/lado'},
+      {n:'Movilidad torácica',s:'10 reps'},
+    ]},
+};
 
 const HABITS=[
   {id:'p1',name:'Proteína en comida 1',desc:'Al menos 40g — pollo, ternera, atún, huevo'},
@@ -949,6 +1055,342 @@ function updSessTimer(){
   document.getElementById('sessTime').textContent=`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
 }
 
+// ═══════════════════════════════════════════════════════
+// PLANIFICADOR SEMANAL — motor de reglas de fatiga
+// ═══════════════════════════════════════════════════════
+let weekPlanDB={};
+const LS_WP='gj5wp';
+function loadWeekPlan(){try{weekPlanDB=JSON.parse(localStorage.getItem(LS_WP))||{};}catch(e){weekPlanDB={};}}
+function saveWeekPlan(){localStorage.setItem(LS_WP,JSON.stringify(weekPlanDB));}
+
+function getWeekPlan(){
+  loadWeekPlan();
+  if(!weekPlanDB[week]){
+    const tags={},flags={},other={};
+    DAYS.forEach((d,i)=>{
+      tags[i]='LIBRE';
+      flags[i]={pain:false,sleep:false};
+      other[i]={activityId:'padel',customName:'',fatigue:'PIERNAS'};
+    });
+    weekPlanDB[week]={tags,flags,other};
+    saveWeekPlan();
+  }
+  if(!weekPlanDB[week].other){
+    const other={};
+    DAYS.forEach((d,i)=>{other[i]={activityId:'padel',customName:'',fatigue:'PIERNAS'};});
+    weekPlanDB[week].other=other;
+  }
+  // Migración: versiones antiguas usaban tags 'GYM' y 'DESCANSO' manuales — ya no existen, se convierten a LIBRE
+  const validTags=['LIBRE','FUTBOL_AMISTOSO','FUTBOL_REAL','ENDURO','KITE','BICI','OTRO'];
+  DAYS.forEach((d,i)=>{
+    if(!validTags.includes(weekPlanDB[week].tags[i]))weekPlanDB[week].tags[i]='LIBRE';
+    if(!weekPlanDB[week].flags[i])weekPlanDB[week].flags[i]={pain:false,sleep:false};
+  });
+  saveWeekPlan();
+  return weekPlanDB[week];
+}
+
+function openPlanModal(){document.getElementById('planOv').classList.add('show');renderPlanModal();}
+function closePlanModal(){document.getElementById('planOv').classList.remove('show');}
+
+function renderPlanModal(){
+  const plan=getWeekPlan();
+  const wellness=getStoredWellness();
+  let html=`<div class="plan-hd">Semana ${week}</div>
+  <div class="plan-sub">Marca qué toca cada día (fútbol, enduro, kite, bici, pádel...). El gimnasio se asigna solo, aplicando el radar de fatiga de fútbol y la adaptación a tus otros deportes.</div>
+  <div class="plan-sync-box">
+    <button class="plan-sync-btn" onclick="syncIntervals()" id="syncBtn">🔄 Sincronizar con Intervals.icu</button>
+    <div id="syncStatus" class="plan-sync-status">${wellness?wellnessHtml(wellness):'Sin datos aún — pulsa sincronizar'}</div>
+    <details class="plan-sync-details"><summary>URL de sincronización</summary>
+      <input class="plan-select" type="text" id="syncUrlInput" value="${getSyncUrl()}" placeholder="URL /exec de tu Apps Script" onchange="setSyncUrl(this.value)">
+    </details>
+  </div>`;
+  DAYS.forEach((d,i)=>{
+    const tag=plan.tags[i]||'DESCANSO';
+    const fl=plan.flags[i]||{pain:false,sleep:false};
+    const ot=plan.other[i]||{activityId:'padel',customName:'',fatigue:'PIERNAS'};
+    html+=`<div class="plan-day">
+      <div class="plan-day-lbl">${d.full}</div>
+      <select class="plan-select" onchange="setPlanTag(${i},this.value)">
+        ${PLAN_TAGS.map(t=>`<option value="${t.id}" ${t.id===tag?'selected':''}>${t.lbl}</option>`).join('')}
+      </select>`;
+    if(tag==='OTRO'){
+      html+=`<select class="plan-select" onchange="setPlanOtherActivity(${i},this.value)">
+        ${OTHER_ACTIVITIES.map(a=>`<option value="${a.id}" ${a.id===ot.activityId?'selected':''}>${a.lbl}</option>`).join('')}
+      </select>`;
+      if(ot.activityId==='personalizado'){
+        html+=`<input class="plan-select" type="text" placeholder="Nombre de la actividad" value="${ot.customName||''}" onchange="setPlanOtherName(${i},this.value)">`;
+      }
+      html+=`<select class="plan-select" onchange="setPlanOtherFatigue(${i},this.value)">
+        ${FATIGUE_TYPES.map(f=>`<option value="${f.id}" ${f.id===ot.fatigue?'selected':''}>${f.lbl}</option>`).join('')}
+      </select>`;
+    }
+    html+=`<div class="plan-flags">
+        <label><input type="checkbox" ${fl.pain?'checked':''} onchange="setPlanFlag(${i},'pain',this.checked)"> 🤕 Dolor/molestias</label>
+        <label><input type="checkbox" ${fl.sleep?'checked':''} onchange="setPlanFlag(${i},'sleep',this.checked)"> 😪 Sueño malo</label>
+      </div>
+    </div>`;
+  });
+  html+=`<button class="plan-gen-btn" onclick="generateWeekPlan()">⚡ Generar plan de la semana</button>
+  <div id="planResult"></div>`;
+  document.getElementById('planBody').innerHTML=html;
+}
+
+function setPlanTag(i,val){const p=getWeekPlan();p.tags[i]=val;saveWeekPlan();renderPlanModal();}
+function setPlanFlag(i,field,val){const p=getWeekPlan();if(!p.flags[i])p.flags[i]={pain:false,sleep:false};p.flags[i][field]=val;saveWeekPlan();}
+function setPlanOtherActivity(i,val){
+  const p=getWeekPlan();
+  const preset=OTHER_ACTIVITIES.find(a=>a.id===val);
+  p.other[i]={activityId:val,customName:p.other[i]?.customName||'',fatigue:preset?preset.fatigue:'CARDIO'};
+  saveWeekPlan();renderPlanModal();
+}
+function setPlanOtherName(i,val){const p=getWeekPlan();p.other[i].customName=val;saveWeekPlan();}
+function setPlanOtherFatigue(i,val){const p=getWeekPlan();p.other[i].fatigue=val;saveWeekPlan();}
+
+// ═══════════════════════════════════════════════════════
+// SINCRONIZACIÓN CON INTERVALS.ICU (actividades reales + fatiga real)
+// ═══════════════════════════════════════════════════════
+const LS_SYNCURL='gj5syncurl';
+const LS_WELLNESS='gj5wellness';
+const DEFAULT_SYNC_URL='https://script.google.com/macros/s/AKfycbzGXqSrUC0yCRcE-qIWRL9Z5np0bJNtrZ3n35b8gl0MsjXdVgZNbZ-JUA-JA1Xu8Lqd/exec';
+
+function getSyncUrl(){return localStorage.getItem(LS_SYNCURL)||DEFAULT_SYNC_URL;}
+function setSyncUrl(v){localStorage.setItem(LS_SYNCURL,v.trim());}
+
+function getStoredWellness(){try{return JSON.parse(localStorage.getItem(LS_WELLNESS));}catch(e){return null;}}
+function saveStoredWellness(w){localStorage.setItem(LS_WELLNESS,JSON.stringify({...w,syncedAt:Date.now()}));}
+
+function wellnessHtml(w){
+  const tsb=w.tsb;
+  let estado,color;
+  if(tsb>5){estado='Fresco';color='var(--gn)';}
+  else if(tsb>=-10){estado='Equilibrado';color='var(--ac)';}
+  else if(tsb>=-20){estado='Cargado';color='#f5a623';}
+  else{estado='Muy fatigado';color='var(--rd)';}
+  const hrsAgo=w.syncedAt?Math.round((Date.now()-w.syncedAt)/3600000):null;
+  return `<b style="color:${color}">${estado}</b> — TSB ${tsb} (CTL ${Math.round(w.ctl)} / ATL ${Math.round(w.atl)})`+(hrsAgo!=null?` <span style="opacity:.6">· sync hace ${hrsAgo}h</span>`:'');
+}
+
+// Mapeo de tipos de actividad de Intervals.icu/Strava → tags del planificador
+const ACTIVITY_TYPE_MAP={
+  Run:{tag:'OTRO',other:{activityId:'running',fatigue:'PIERNAS'}},
+  TrailRun:{tag:'OTRO',other:{activityId:'running',fatigue:'PIERNAS'}},
+  Ride:{tag:'BICI'},VirtualRide:{tag:'BICI'},EBikeRide:{tag:'BICI'},MountainBikeRide:{tag:'BICI'},GravelRide:{tag:'BICI'},
+  Soccer:{tag:'FUTBOL_AMISTOSO'},
+  Swim:{tag:'OTRO',other:{activityId:'natacion',fatigue:'CARDIO'}},
+  RockClimbing:{tag:'OTRO',other:{activityId:'escalada',fatigue:'AGARRE'}},
+  Kitesurf:{tag:'KITE'},Windsurf:{tag:'KITE'},
+  Tennis:{tag:'OTRO',other:{activityId:'tenis',fatigue:'PIERNAS'}},
+  Basketball:{tag:'OTRO',other:{activityId:'baloncesto',fatigue:'PIERNAS'}},
+};
+
+// Apps Script no manda cabeceras CORS en fetch() cross-origin (limitación conocida de Google),
+// así que cargamos la respuesta como <script> (JSONP), que no está sujeto a CORS
+function jsonp(url){
+  return new Promise((resolve,reject)=>{
+    const cbName='gjcb_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+    const script=document.createElement('script');
+    const cleanup=()=>{try{delete window[cbName];}catch(e){}script.remove();};
+    window[cbName]=(data)=>{cleanup();resolve(data);};
+    script.onerror=()=>{cleanup();reject(new Error('No se pudo cargar la URL de sincronización'));};
+    script.src=url+(url.includes('?')?'&':'?')+'callback='+cbName;
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){cleanup();reject(new Error('Tiempo de espera agotado (revisa la URL)'));}},15000);
+  });
+}
+
+async function syncIntervals(){
+  const btn=document.getElementById('syncBtn');
+  const statusEl=document.getElementById('syncStatus');
+  const url=getSyncUrl();
+  if(!url){statusEl.textContent='Falta configurar la URL de sincronización';return;}
+  btn.textContent='🔄 Sincronizando...';btn.disabled=true;
+  try{
+    const data=await jsonp(url+'?action=summary&days=14');
+    if(data.error){statusEl.textContent='Error: '+data.error;btn.textContent='🔄 Sincronizar con Intervals.icu';btn.disabled=false;return;}
+    if(data.wellness&&typeof data.wellness.ctl==='number'){
+      saveStoredWellness(data.wellness);
+      statusEl.innerHTML=wellnessHtml(data.wellness);
+    }
+    // Ubica el lunes de la semana real actual para mapear actividades a días
+    const now=new Date();
+    const dow=(now.getDay()+6)%7; // 0=lunes ... 6=domingo
+    const monday=new Date(now);monday.setHours(0,0,0,0);monday.setDate(now.getDate()-dow);
+    let matched=0;
+    (data.activities||[]).forEach(act=>{
+      const dstr=act.start_date_local||act.start_date;
+      if(!dstr)return;
+      const d=new Date(dstr);
+      const dMid=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+      const offset=Math.round((dMid-monday)/86400000);
+      if(offset<0||offset>6)return; // fuera de la semana real actual
+      const map=ACTIVITY_TYPE_MAP[act.type];
+      if(!map)return; // tipo no reconocido (ej. entreno de gimnasio ya gestionado por la app) — se ignora
+      setPlanTag(offset,map.tag);
+      if(map.tag==='OTRO'&&map.other){
+        setOtherFromSync(offset,map.other);
+      }
+      matched++;
+    });
+    renderPlanModal();
+    const freshStatus=document.getElementById('syncStatus');
+    if(freshStatus)freshStatus.innerHTML+=`<div style="margin-top:4px;font-size:11px;opacity:.7">${matched} actividad(es) real(es) detectada(s) esta semana</div>`;
+  }catch(err){
+    statusEl.textContent='No se pudo conectar: '+err.message;
+  }
+  document.getElementById('syncBtn').textContent='🔄 Sincronizar con Intervals.icu';
+  document.getElementById('syncBtn').disabled=false;
+}
+
+function setOtherFromSync(i,otherData){
+  const p=getWeekPlan();
+  p.other[i]={activityId:otherData.activityId,customName:'',fatigue:otherData.fatigue};
+  saveWeekPlan();
+}
+
+// Motor de reglas — traduce las etiquetas de la semana en tipos de sesión
+function computeWeekPlan(){
+  const plan=getWeekPlan();
+  const tags=plan.tags,flags=plan.flags,other=plan.other||{};
+  const n=7;
+  const result=new Array(n).fill(null);
+  const reasons=new Array(n).fill('');
+  const isMatch=i=>tags[i]==='FUTBOL_REAL'||tags[i]==='FUTBOL_AMISTOSO';
+
+  // 1. Actividades externas directas (no negociables)
+  for(let i=0;i<n;i++){
+    if(tags[i]==='FUTBOL_REAL'){result[i]='FÚTBOL';reasons[i]='Partido real — máxima frescura, sin gimnasio';}
+    else if(tags[i]==='FUTBOL_AMISTOSO'){result[i]='FÚTBOL';reasons[i]='Fútbol amistoso — sin gimnasio';}
+    else if(tags[i]==='ENDURO'){result[i]='ENDURO';reasons[i]='Enduro — fatiga lumbar y de agarre';}
+    else if(tags[i]==='KITE'){result[i]='KITE';reasons[i]='Kitesurf — fatiga isométrica de core/tren superior';}
+    else if(tags[i]==='BICI'){result[i]='BICI';reasons[i]='Bici larga — cardio prolongado';}
+    else if(tags[i]==='OTRO'){
+      const o=other[i]||{fatigue:'CARDIO'};
+      const preset=OTHER_ACTIVITIES.find(a=>a.id===o.activityId);
+      const name=o.activityId==='personalizado'?(o.customName||'Otra actividad'):(preset?preset.lbl.replace(/^\S+\s/,''):'Otra actividad');
+      setOtro(DAYS[i].id,name,o.fatigue);
+      result[i]='OTRO';
+      reasons[i]=name+' — '+(FATIGUE_NOTE[o.fatigue]||'');
+    }
+    // tags[i]==='LIBRE' se resuelve más abajo: el algoritmo decide gimnasio o descanso
+  }
+
+  // 2. Autorregulación: dolor o mal sueño fuerza recuperación en días libres
+  for(let i=0;i<n;i++){
+    if(tags[i]==='LIBRE'&&flags[i]&&(flags[i].pain||flags[i].sleep)){
+      result[i]='DESCANSO';
+      reasons[i]=flags[i].pain?'Autorregulación: molestias — descanso/movilidad':'Autorregulación: sueño deficiente — descanso/movilidad';
+    }
+  }
+
+  // 3. Radar de fútbol — 48h ANTES de partido real: solo tren superior
+  for(let i=0;i<n;i++){
+    if(tags[i]!=='FUTBOL_REAL')continue;
+    [i-1,i-2].forEach(j=>{
+      if(j>=0&&tags[j]==='LIBRE'&&result[j]===null){
+        result[j]='TORSO';
+        reasons[j]='Pre-partido (48h antes) — solo tren superior, nada de pierna pesada';
+      }
+    });
+  }
+
+  // 4. Radar de fútbol — 24-48h DESPUÉS de cualquier partido: recuperación
+  for(let i=0;i<n;i++){
+    if(!isMatch(i))continue;
+    [i+1,i+2].forEach(j=>{
+      if(j<n&&tags[j]==='LIBRE'){
+        result[j]='DESCANSO';
+        reasons[j]='Post-partido (tren inferior dañado) — recuperación activa';
+      }
+    });
+  }
+
+  // 5. Adaptación Enduro/Kite/Otro — al día siguiente, evita el tipo de sesión que reincide en la fatiga
+  const banTorso=new Array(n).fill(false);
+  const banPierna=new Array(n).fill(false);
+  for(let i=0;i<n;i++){
+    if((tags[i]==='ENDURO'||tags[i]==='KITE')&&i+1<n)banTorso[i+1]=true;
+    if(tags[i]==='OTRO'&&i+1<n){
+      const fatigue=(other[i]||{}).fatigue;
+      if(fatigue==='PIERNAS')banPierna[i+1]=true;
+      else if(fatigue==='AGARRE'||fatigue==='CORE')banTorso[i+1]=true;
+      // CARDIO: sin restricción, fatiga residual baja
+    }
+  }
+
+  // 6. Días libres restantes → reparto óptimo: evita días de gym seguidos, máx. 3/semana (Low-Drag)
+  //    Si Intervals.icu indica fatiga real alta (TSB muy negativo), se reduce el máximo a 2
+  const cycle=['PIERNA','TORSO','FULLBODY'];
+  const candidates=[];
+  for(let i=0;i<n;i++){if(tags[i]==='LIBRE'&&result[i]===null)candidates.push(i);}
+  const wellness=getStoredWellness();
+  const fatigueCapped=wellness&&typeof wellness.tsb==='number'&&wellness.tsb<-20;
+  const weeklyCap=fatigueCapped?2:3;
+  const maxGym=Math.min(weeklyCap,candidates.length);
+  const picked=[];
+  const isGymType=t=>['PIERNA','TORSO','FULLBODY'].includes(t);
+  // Busca en TODO el historial guardado (no solo el fin de semana pasado) cuál fue el último día real de gimnasio,
+  // por lejos que quede, hasta 21 días atrás, usando el índice absoluto de días (semana×7 + día)
+  function findLastGymBefore(absIdx){
+    for(let k=1;k<=21;k++){
+      const probe=absIdx-k;
+      if(probe<0)break;
+      const w=Math.floor(probe/7)+1,d=probe%7;
+      const t=sessDB[w+'_'+DAYS[d].id];
+      if(isGymType(t))return probe;
+    }
+    return -999;
+  }
+  const baseAbs=(week-1)*7;
+  let lastGymAbs=findLastGymBefore(baseAbs);
+  // Primera pasada: reparto espaciado (mínimo 1 día de descanso entre sesiones), con memoria real del histórico
+  for(const i of candidates){
+    if(picked.length>=maxGym)break;
+    const absI=baseAbs+i;
+    if(absI-lastGymAbs>=2){picked.push(i);lastGymAbs=absI;}
+  }
+  // Si el espaciado no llega al máximo posible (semana con pocos días libres), rellena sin desperdiciar sesiones
+  if(picked.length<maxGym){
+    for(const i of candidates){
+      if(picked.length>=maxGym)break;
+      if(!picked.includes(i))picked.push(i);
+    }
+    picked.sort((a,b)=>a-b);
+  }
+  let ci=0;
+  picked.forEach(i=>{
+    let pick=cycle[ci%cycle.length];
+    let tries=0;
+    while(((banTorso[i]&&pick==='TORSO')||(banPierna[i]&&pick==='PIERNA'))&&tries<3){ci++;pick=cycle[ci%cycle.length];tries++;}
+    result[i]=pick;
+    const restricted=banTorso[i]||banPierna[i];
+    reasons[i]=restricted?`Gimnasio — ${pick} (evitando la zona fatigada por la actividad de ayer)`:`Gimnasio — ${pick}`;
+    ci++;
+  });
+  candidates.forEach(i=>{
+    if(result[i]===null){
+      result[i]='DESCANSO';
+      reasons[i]=fatigueCapped?`Descanso — fatiga real alta (TSB ${wellness.tsb}), esta semana solo ${weeklyCap} días de gimnasio`:'Descanso — reparto óptimo de la semana (evita acumular gimnasio en días seguidos)';
+    }
+  });
+
+  // 7. Cualquier resto sin asignar → descanso
+  for(let i=0;i<n;i++){if(result[i]===null){result[i]='DESCANSO';reasons[i]='Descanso';}}
+
+  return{result,reasons};
+}
+
+function generateWeekPlan(){
+  const{result,reasons}=computeWeekPlan();
+  DAYS.forEach((d,i)=>{sessDB[week+'_'+d.id]=result[i];});
+  lsSave();
+  const gymDays=result.filter(r=>['PIERNA','TORSO','FULLBODY'].includes(r)).length;
+  const html=DAYS.map((d,i)=>`<div class="plan-res-row"><span>${d.full}</span><span class="plan-res-type">${BADGE_LBL[result[i]]||result[i]}</span></div><div class="plan-res-reason">${reasons[i]}</div>`).join('');
+  document.getElementById('planResult').innerHTML=`<div class="plan-res-title">✓ Plan generado — ${gymDays} día${gymDays===1?'':'s'} de gimnasio esta semana</div>${html}
+  <button class="plan-gen-btn" style="margin-top:10px;background:var(--bg3);color:var(--tx);border:1px solid var(--brd2)" onclick="closePlanModal();renderAll();">Aplicar y cerrar</button>`;
+  navigator.vibrate&&navigator.vibrate([50,30,80]);
+}
+
 // ── NAV ──
 function changeWeek(d){week=Math.max(1,Math.min(12,week+d));renderAll();}
 function selDay(i){dayIdx=i;renderAll();}
@@ -1060,7 +1502,7 @@ function renderHoy(){
   const badgeCls=BADGE_CLS[st||day.def]||'b-des';
   const badgeLbl=BADGE_LBL[st||day.def]||day.def;
   document.getElementById('dayBadge').className='badge '+badgeCls;
-  document.getElementById('dayBadge').textContent=badgeLbl;
+  document.getElementById('dayBadge').innerHTML=badgeLbl;
   document.getElementById('dayTitle').textContent=day.full;
   const ttag=document.getElementById('todayTag');
   ttag.style.display=isToday?'':'none';
@@ -1076,7 +1518,7 @@ function renderHoy(){
   }
 
   // Session timer bar
-  const hasExercises=st&&st!=='FÚTBOL'&&st!=='DESCANSO';
+  const hasExercises=st&&!['FÚTBOL','DESCANSO','ENDURO','KITE','BICI','OTRO'].includes(st);
   document.getElementById('sessBar').classList.toggle('show',hasExercises);
   if(!sessRunning&&hasExercises){
     const saved=sessTimeDB[dayKey()];
@@ -1093,6 +1535,8 @@ function renderExArea(dId, st){
   if(!st){exArea.innerHTML='';return;}
   if(st==='FÚTBOL'){renderFutbolDay(exArea);return;}
   if(st==='DESCANSO'){renderDescansoDay(exArea);return;}
+  if(st==='ENDURO'||st==='KITE'||st==='BICI'){renderExternalDay(exArea,st);return;}
+  if(st==='OTRO'){renderOtroDay(exArea,dId);return;}
   const routine=blk[st];
   if(!routine){exArea.innerHTML='';return;}
   let html=`<div class="card"><div class="card-hdr"><span class="card-title">${routine.focus}</span></div><div class="card-body">`;
@@ -1152,6 +1596,48 @@ function renderDescansoDay(el){
         ${ACTIVE_REST.map(i=>`<div class="fut-item" style="border-color:var(--brd)"><span>${i.n}</span><span style="color:var(--gn);font-size:13px;font-weight:600">${i.s}</span></div>`).join('')}
       </div>
     </div>`;
+}
+
+function renderExternalDay(el,type){
+  const info=EXTERNAL_INFO[type];
+  el.innerHTML=`
+    <div class="fut-card">
+      <div class="fut-title">${info.title}</div>
+      <div style="font-size:13px;color:var(--mu2)">${info.note}</div>
+    </div>
+    <div class="fut-card" style="margin-top:0">
+      <div class="fut-title">🧊 Recuperación recomendada</div>
+      ${info.stretches.map(i=>`<div class="fut-item"><span>${i.n}</span><span class="fut-item-s">${i.s}</span></div>`).join('')}
+    </div>`;
+}
+
+// ── OTRA ACTIVIDAD (genérica) ──
+let otroDB={};
+const LS_OTRO='gj5otro';
+function loadOtro(){try{otroDB=JSON.parse(localStorage.getItem(LS_OTRO))||{};}catch(e){otroDB={};}}
+function saveOtro(){localStorage.setItem(LS_OTRO,JSON.stringify(otroDB));}
+function getOtro(dId){loadOtro();return otroDB[week+'_'+dId]||{name:'Otra actividad',fatigue:'CARDIO'};}
+function setOtro(dId,name,fatigue){loadOtro();otroDB[week+'_'+dId]={name,fatigue};saveOtro();}
+
+function renderOtroDay(el,dId){
+  const o=getOtro(dId);
+  const note=FATIGUE_NOTE[o.fatigue]||FATIGUE_NOTE.CARDIO;
+  el.innerHTML=`
+    <div class="fut-card">
+      <div class="fut-title">🎾 ${o.name}</div>
+      <div style="font-size:13px;color:var(--mu2)">${note}</div>
+    </div>`;
+}
+
+function promptOtroManual(){
+  const name=prompt('¿Qué actividad has hecho? (ej. Pádel, e-MTB, Natación...)');
+  if(!name)return;
+  const fatigueLbl=FATIGUE_TYPES.map((f,i)=>`${i+1}) ${f.lbl}`).join('\n');
+  const choice=prompt('¿Qué tipo de fatiga deja?\n'+fatigueLbl+'\n\nEscribe el número (1-4):','1');
+  const idx=parseInt(choice)-1;
+  const fatigue=(FATIGUE_TYPES[idx]||FATIGUE_TYPES[3]).id;
+  setOtro(DAYS[dayIdx].id,name,fatigue);
+  setSess('OTRO');
 }
 
 function setExW(dId,st,name,v){
